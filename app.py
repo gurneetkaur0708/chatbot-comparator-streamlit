@@ -91,14 +91,14 @@ Similarity Level: <percentage>%
         return f"[Final Answer Error] {e}"
 
 # Streamlit UI
-st.title("🤖 Chatbot Response Comparator")
+st.title(" Chatbot Response Comparator")
 question = st.text_input("Enter your question")
 
 if st.button("Generate Response") and question.strip():
     with st.spinner("Calling Gemini..."):
         gemini = call_gemini(question)
     with st.spinner("Calling Cypher..."):
-        moonshot = call_cypher(question)
+        cypher = call_cypher(question)
     with st.spinner("Calling DeepSeek..."):
         deepseek = call_deepseek(question)
     with st.spinner("Generating Final Answer..."):
