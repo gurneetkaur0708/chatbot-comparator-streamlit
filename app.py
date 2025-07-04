@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 import requests
 from together import Together
-import re
+
 # Load environment variables
 load_dotenv()
 
@@ -20,6 +20,8 @@ gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 # Together client for DeepSeek
 together_client = Together(api_key=TOGETHER_API_KEY)
 
+# --- MODEL CALL FUNCTIONS ---
+
 def call_gemini(prompt):
     try:
         response = gemini_model.generate_content(prompt)
@@ -27,13 +29,13 @@ def call_gemini(prompt):
     except Exception as e:
         return f"[Gemini Error] {e}"
 
-def call_cypher(prompt):  # renamed from call_moonshot
+def call_cypher(prompt):
     try:
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://chatbot.com",  # Optional
-            "X-Title": "ChatbotCompare"             # Optional
+            "HTTP-Referer": "https://chatbot.com",
+            "X-Title": "ChatbotCompare"
         }
         payload = {
             "model": "openrouter/cypher-alpha:free",
@@ -55,6 +57,7 @@ def call_deepseek(prompt):
     except Exception as e:
         return f"[DeepSeek Error] {e}"
 
+# --- FINAL AGGREGATED ANSWER USING GEMINI ---
 def final_response_gemini_compare(question, g, c, d):
     try:
         prompt = f"""
@@ -72,24 +75,40 @@ DeepSeek's Answer:
 {d}
 
 Instructions:
-- Read all three responses.
-- Find the statements or meanings that are **semantically similar** in at least **two out of three** answers.
-- If wording is different but meaning is the same, consider them similar.
-- Based on those overlapping meanings, generate a **single final answer**.
-- Underline or highlight the parts in the final answer that are common (or equivalent) between at least two answers.
-  - Use **markdown bold** (`**like this**`) to highlight the common parts.
-- Estimate a **similarity level percentage** (0–100%) representing how much agreement exists among the models and highlight the .
-
-Return format:
-Final Answer: <the best merged answer>
-Similarity Level: <percentage>%
+- Find the statements or meanings that are semantically similar in at least two answers.
+- Based on those overlapping ideas, generate a final reliable answer.
+- Highlight the common parts using **markdown bold** (`**like this**`).
+Only output the final answer without similarity score.
 """
-
         response = gemini_model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
         return f"[Final Answer Error] {e}"
 
+# --- SIMILARITY CALCULATION LOGIC ---
+def calculate_similarity(g, c, d):
+    g = g.strip().lower()
+    c = c.strip().lower()
+    d = d.strip().lower()
+    
+    match_count = 0
+    if g == c:
+        match_count += 1
+    if g == d:
+        match_count += 1
+    if c == d:
+        match_count += 1
+
+    if match_count == 3:
+        return 100
+    elif match_count == 2:
+        return 66
+    elif match_count == 1:
+        return 33
+    else:
+        return 0
+
+# --- SIMILARITY BAR DISPLAY ---
 def similarity_bar(similarity):
     green_width = similarity
     red_width = 100 - similarity
@@ -102,9 +121,9 @@ def similarity_bar(similarity):
     <p style="margin-top: 8px; font-weight: bold;">Similarity: {similarity}%</p>
     """
     st.markdown(bar_html, unsafe_allow_html=True)
-    
-# Streamlit UI
-st.title(" Chatbot Response Comparator")
+
+# --- STREAMLIT UI ---
+st.title("🤖 Chatbot Response Comparator")
 question = st.text_input("Enter your question")
 
 if st.button("Generate Response") and question.strip():
@@ -117,18 +136,18 @@ if st.button("Generate Response") and question.strip():
     with st.spinner("Generating Final Answer..."):
         final = final_response_gemini_compare(question, gemini, cypher, deepseek)
 
-    st.subheader("Gemini Response")
+    st.subheader("🔹 Gemini Response")
     st.write(gemini)
 
-    st.subheader("Cypher Response")
+    st.subheader("🔹 Cypher Response")
     st.write(cypher)
 
-    st.subheader("DeepSeek Response")
+    st.subheader("🔹 DeepSeek Response")
     st.write(deepseek)
 
     st.subheader("⭐ Final Best Answer")
     st.success(final)
 
-    similarity_match = re.search(r"similarity\s*level\s*[:\-]?\s*(\d+)%", final, re.IGNORECASE)
-    similarity = int(similarity_match.group(1)) if similarity_match else 0
+    # Calculate and display similarity
+    similarity = calculate_similarity(gemini, cypher, deepseek)
     similarity_bar(similarity)
