@@ -129,6 +129,6 @@ if st.button("Generate Response") and question.strip():
     st.subheader("⭐ Final Best Answer")
     st.success(final)
 
- similarity_match = re.search(r"Similarity Level: (\d+)%", final)
+    similarity_match = re.search(r"Similarity Level: (\d+)%", final)
     similarity = int(similarity_match.group(1)) if similarity_match else 0
     similarity_bar(similarity)
