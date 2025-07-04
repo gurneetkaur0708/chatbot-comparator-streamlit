@@ -90,6 +90,19 @@ Similarity Level: <percentage>%
     except Exception as e:
         return f"[Final Answer Error] {e}"
 
+def similarity_bar(similarity):
+    green_width = similarity
+    red_width = 100 - similarity
+
+    bar_html = f"""
+    <div style="width: 100%; background: #ddd; height: 25px; border-radius: 8px; display: flex;">
+        <div style="width: {green_width}%; background: #4CAF50; height: 100%; border-top-left-radius: 8px; border-bottom-left-radius: 8px;"></div>
+        <div style="width: {red_width}%; background: #F44336; height: 100%; border-top-right-radius: 8px; border-bottom-right-radius: 8px;"></div>
+    </div>
+    <p style="margin-top: 8px; font-weight: bold;">Similarity: {similarity}%</p>
+    """
+    st.markdown(bar_html, unsafe_allow_html=True)
+    
 # Streamlit UI
 st.title(" Chatbot Response Comparator")
 question = st.text_input("Enter your question")
@@ -116,15 +129,8 @@ if st.button("Generate Response") and question.strip():
     st.subheader("⭐ Final Best Answer")
     st.success(final)
 
-def similarity_bar(similarity):
-    green_width = similarity
-    red_width = 100 - similarity
+ similarity_match = re.search(r"Similarity Level: (\d+)%", final)
+    similarity = int(similarity_match.group(1)) if similarity_match else 0
 
-    bar_html = f"""
-    <div style="width: 100%; background: #ddd; height: 25px; border-radius: 8px; display: flex;">
-        <div style="width: {green_width}%; background: #4CAF50; height: 100%; border-top-left-radius: 8px; border-bottom-left-radius: 8px;"></div>
-        <div style="width: {red_width}%; background: #F44336; height: 100%; border-top-right-radius: 8px; border-bottom-right-radius: 8px;"></div>
-    </div>
-    <p style="margin-top: 8px; font-weight: bold;">Similarity: {similarity}%</p>
-    """
-    st.markdown(bar_html, unsafe_allow_html=True)
+    # Show bar
+    similarity_bar(similarity)
