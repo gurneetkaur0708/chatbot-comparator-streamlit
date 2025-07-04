@@ -76,7 +76,7 @@ DeepSeek's Answer:
 
 Instructions:
 - Find the statements or meanings that are semantically similar in at least two answers.
-- Based on those overlapping ideas, generate a final reliable answer.
+- Based on those overlapping ideas, generate a final reliable answer that is short and crisp.
 - Highlight the common parts using **markdown bold** (`**like this**`).
 Only output the final answer without similarity score.
 """
