@@ -55,7 +55,7 @@ def call_deepseek(prompt):
     except Exception as e:
         return f"[DeepSeek Error] {e}"
 
-def final_response_gemini_compare(question, g, m, d):
+def final_response_gemini_compare(question, g, c, d):
     try:
         prompt = f"""
 You are an intelligent AI that compares answers from three different AI models to the same question.
