@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 import requests
 from together import Together
-
+import re
 # Load environment variables
 load_dotenv()
 
